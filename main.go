@@ -82,8 +82,15 @@ func GetRandomVals() []int {
 
 }
 
-func SeedBoxes(b *Board) {
+// Populate boxes 0, 4, 8; they are diagonal and therefore independant.
+// This completes as much of the board as possible before attempting to brute force the remaining boxes;
+// (theoretically) increasing the chance of success
+func SeedInitialBoxes(b *Board) {
+
+	// 2d array of random integers used to seed boxes 0, 4, 8 (diagonal)
 	vals := [3][]int{GetRandomVals(), GetRandomVals(), GetRandomVals()}
+
+	// Complementary Array of indices for incrementing the vals array when val has been used
 	i := [3]int{0, 0, 0}
 
 	for r, row := range b.cells {
@@ -116,7 +123,7 @@ func PopulateBoard(b *Board) {
 		}
 	}
 
-	SeedBoxes(b)
+	SeedInitialBoxes(b)
 
 }
 
