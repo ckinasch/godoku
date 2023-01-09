@@ -106,9 +106,7 @@ func PopulateBox(box int, b *Board) {
 func PopulateBoard(b *Board) {
 
 	// Populate diagonal boxes first to increase chance of success of brute force
-	seedBoxes := [3]int{0, 4, 8}
-	// Populate remaining boxes
-	remainingBoxes := [6]int{1, 2, 3, 5, 6, 7}
+	box_order := [9]int{0, 4, 8, 1, 2, 3, 5, 6, 7}
 
 	for r, row := range b.cells {
 		for c := range row {
@@ -118,11 +116,7 @@ func PopulateBoard(b *Board) {
 		}
 	}
 
-	for _, v := range seedBoxes {
-		PopulateBox(v, b)
-	}
-
-	for _, v := range remainingBoxes {
+	for _, v := range box_order {
 		PopulateBox(v, b)
 	}
 
