@@ -1,21 +1,19 @@
 package main
 
 import (
-	"errors"
+	crypto_rand "crypto/rand"
+	"encoding/binary"
+	_ "errors"
 	"fmt"
-	"math/rand"
-	"time"
+	math_rand "math/rand"
+	_ "time"
 )
-
-var _ = errors.New
-var _ = fmt.Println
-var _ = rand.Perm
 
 type Cell struct {
 	row   int
 	col   int
 	value int
-	box   Box
+	box   int
 }
 
 type Box struct {
@@ -37,7 +35,8 @@ func PrintBoard(b *Board) {
 		for c := range row {
 			cur := b.cells[r][c]
 			fmt.Print("|")
-			fmt.Print(cur.value)
+			// fmt.Printf("%d:%d", cur.value, cur.box)
+			fmt.Printf("%d", cur.value)
 
 			if (c+1)%3 == 0 {
 				fmt.Print("|")
@@ -53,10 +52,29 @@ func PrintBoard(b *Board) {
 	}
 }
 
+// Simultaneous calls for new random slices may overlap; time based seed is insufficient;
+// Cryptographically secure approach to ensure unique slices
+func seedRand() {
+	// https://stackoverflow.com/a/54491783
+
+	var b [8]byte
+	_, err := crypto_rand.Read(b[:])
+
+	if err != nil {
+		panic("Cannot seed")
+	}
+
+	seedval := int64(binary.LittleEndian.Uint64(b[:]))
+
+	math_rand.Seed(seedval)
+}
+
 // Return a slice of randomly generated distinct integers; all values are incremented
 func GetRandomVals() []int {
 
-	vals := rand.Perm(9)
+	seedRand()
+
+	vals := math_rand.Perm(9)
 	for i := range vals {
 		vals[i]++
 	}
@@ -64,16 +82,41 @@ func GetRandomVals() []int {
 
 }
 
-func PopulateBoard(b *Board) {
-
-	var _ = GetRandomVals()
+func SeedBoxes(b *Board) {
+	vals := [3][]int{GetRandomVals(), GetRandomVals(), GetRandomVals()}
+	i := [3]int{0, 0, 0}
 
 	for r, row := range b.cells {
 		for c := range row {
 			cur := &b.cells[r][c]
-			cur.value = r
+			if cur.box == 0 {
+				cur.value = vals[0][i[0]]
+				i[0]++
+			}
+			if cur.box == 4 {
+				cur.value = vals[1][i[1]]
+				i[1]++
+			}
+			if cur.box == 8 {
+				cur.value = vals[2][i[2]]
+				i[2]++
+			}
 		}
 	}
+
+}
+
+func PopulateBoard(b *Board) {
+
+	for r, row := range b.cells {
+		for c := range row {
+			box := r/3*3 + c/3
+			cur := &b.cells[r][c]
+			cur.box = box
+		}
+	}
+
+	SeedBoxes(b)
 
 }
 
@@ -86,5 +129,4 @@ func main() {
 }
 
 func init() {
-	rand.Seed(time.Now().Unix())
 }
