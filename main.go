@@ -115,6 +115,11 @@ func CheckValueConflict(val int, cur *Cell) bool {
 	return false
 }
 
+// Replace the first element of a slice with the last one and return a slice with the tail cut off
+func removeSliceZero(s []int) []int {
+	s[0] = s[len(s)-1]
+	return s[:len(s)-1]
+}
 func PopulateBox(box int) {
 	vals := GetRandomVals()
 	i := 0
@@ -124,20 +129,20 @@ func PopulateBox(box int) {
 
 			if cur.box == box {
 
-				// Check if val can be placed
-				// retry until it can be placed
+				valueConflict := CheckValueConflict(vals[i], cur)
 
-				CheckValueConflict(vals[i], cur)
-				// valueConflict := CheckValueConflict(vals[i])
+				switch {
+				case !valueConflict:
+					cur.value = vals[i]
+					vals = removeSliceZero(vals)
+					fmt.Println(vals)
 
-				// if valueConflict{
-				// try next value
-				// fmt.Println("Conflict")
-				// }
+				case i+1 == len(vals):
+					fmt.Println("No solution", cur, vals[i])
 
-				// Place if possible
-				cur.value = vals[i]
-				i++
+				case valueConflict:
+					i++
+				}
 
 			}
 		}
