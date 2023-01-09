@@ -10,7 +10,6 @@ var _ = errors.New
 var _ = fmt.Println
 var _ = rand.Perm
 
-
 type Cell struct {
 	row   int
 	col   int
@@ -30,6 +29,31 @@ type Board struct {
 
 var b Board
 
+func PrintBoard(b *Board) {
+	lines := "---------------------"
+	fmt.Println(lines)
+	for r, row := range b.cells {
+		for c := range row {
+			cur := b.cells[r][c]
+			fmt.Print("|")
+			fmt.Print(cur.value)
+
+			if (c+1)%3 == 0 {
+				fmt.Print("|")
+			}
+		}
+		if (r+1)%3 == 0 {
+			fmt.Println("")
+			fmt.Println(lines)
+
+		} else {
+			fmt.Println("")
+		}
+	}
+}
+
 func main() {
+
+	PrintBoard(&b)
 
 }
