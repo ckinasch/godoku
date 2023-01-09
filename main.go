@@ -113,6 +113,27 @@ func SeedInitialBoxes(b *Board) {
 
 }
 
+func PopulateBox(box int, b *Board) {
+	vals := GetRandomVals()
+	i := 0
+	for r, row := range b.cells {
+		for c := range row {
+			cur := &b.cells[r][c]
+
+			if cur.box == box {
+
+				// Check if val can be placed
+				// retry until it can be placed
+
+				// Place if possible
+				cur.value = vals[i]
+				i++
+
+			}
+		}
+	}
+}
+
 func PopulateBoard(b *Board) {
 
 	for r, row := range b.cells {
@@ -124,6 +145,10 @@ func PopulateBoard(b *Board) {
 	}
 
 	SeedInitialBoxes(b)
+
+	// TODO: Populate other boxes
+
+	PopulateBox(1, b)
 
 }
 
