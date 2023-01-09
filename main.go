@@ -16,6 +16,8 @@ type Cell struct {
 	box   int
 }
 
+// TODO: vals as reference to Cells?
+// on instantiate step, point to vals
 type Box struct {
 	index int
 	vals  [9]int
@@ -28,7 +30,7 @@ type Board struct {
 
 var b Board
 
-func PrintBoard(b *Board) {
+func PrintBoard() {
 	lines := "---------------------"
 	fmt.Println(lines)
 	for r, row := range b.cells {
@@ -82,7 +84,38 @@ func GetRandomVals() []int {
 
 }
 
-func PopulateBox(box int, b *Board) {
+func IsFoundInRow(value int, r int) bool {
+
+	for i := 0; i < 9; i++ {
+		if value == b.cells[r][i].value {
+			return true
+		}
+	}
+
+	return false
+
+}
+
+func IsFoundInCol(value int, c int) bool {
+	for i := 0; i < 9; i++ {
+		if value == b.cells[i][c].value {
+			return true
+		}
+	}
+	return false
+}
+
+func CheckValueConflict(val int, cur *Cell) bool {
+	isInRow := IsFoundInRow(val, cur.row)
+	isInCol := IsFoundInCol(val, cur.col)
+
+	if isInRow || isInCol {
+		return true
+	}
+	return false
+}
+
+func PopulateBox(box int) {
 	vals := GetRandomVals()
 	i := 0
 	for r, row := range b.cells {
@@ -94,6 +127,14 @@ func PopulateBox(box int, b *Board) {
 				// Check if val can be placed
 				// retry until it can be placed
 
+				CheckValueConflict(vals[i], cur)
+				// valueConflict := CheckValueConflict(vals[i])
+
+				// if valueConflict{
+				// try next value
+				// fmt.Println("Conflict")
+				// }
+
 				// Place if possible
 				cur.value = vals[i]
 				i++
@@ -103,7 +144,7 @@ func PopulateBox(box int, b *Board) {
 	}
 }
 
-func PopulateBoard(b *Board) {
+func PopulateBoard() {
 
 	// Populate diagonal boxes first to increase chance of success of brute force
 	box_order := [9]int{0, 4, 8, 1, 2, 3, 5, 6, 7}
@@ -112,21 +153,23 @@ func PopulateBoard(b *Board) {
 		for c := range row {
 			box := r/3*3 + c/3
 			cur := &b.cells[r][c]
+			cur.row = r
+			cur.col = c
 			cur.box = box
 		}
 	}
 
 	for _, v := range box_order {
-		PopulateBox(v, b)
+		PopulateBox(v)
 	}
 
 }
 
 func main() {
 
-	PopulateBoard(&b)
+	PopulateBoard()
 
-	PrintBoard(&b)
+	PrintBoard()
 
 }
 
