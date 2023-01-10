@@ -28,9 +28,9 @@ type Board struct {
 	boxes [9]Box
 }
 
-var b Board
+var board Board
 
-func PrintBoard() {
+func (b *Board) PrintBoard() {
 	lines := "---------------------"
 	fmt.Println(lines)
 	for r, row := range b.cells {
@@ -84,43 +84,26 @@ func GetRandomVals() []int {
 
 }
 
-func IsFoundInRow(value int, r int) bool {
-
-	for i := 0; i < 9; i++ {
-		if value == b.cells[r][i].value {
-			return true
-		}
-	}
-
-	return false
-
-}
-
-func IsFoundInCol(value int, c int) bool {
-	for i := 0; i < 9; i++ {
-		if value == b.cells[i][c].value {
-			return true
-		}
-	}
-	return false
-}
-
-func CheckValueConflict(val int, cur *Cell) bool {
-	isInRow := IsFoundInRow(val, cur.row)
-	isInCol := IsFoundInCol(val, cur.col)
-
-	if isInRow || isInCol {
-		return true
-	}
-	return false
-}
-
 // Replace the first element of a slice with the last one and return a slice with the tail cut off
 func removeSliceZero(s []int) []int {
 	s[0] = s[len(s)-1]
 	return s[:len(s)-1]
 }
-func PopulateBox(box int) {
+
+func (c *Cell) CheckValueConflict(val int) bool {
+
+	for i := 0; i < 9; i++ {
+		if val == board.cells[i][c.col].value {
+			return true
+		}
+		if val == board.cells[c.row][i].value {
+			return true
+		}
+	}
+	return false
+}
+
+func (b *Board) PopulateBox(box int) {
 	vals := GetRandomVals()
 	i := 0
 	for r, row := range b.cells {
@@ -129,7 +112,7 @@ func PopulateBox(box int) {
 
 			if cur.box == box {
 
-				valueConflict := CheckValueConflict(vals[i], cur)
+				valueConflict := cur.CheckValueConflict(vals[i])
 
 				switch {
 				case !valueConflict:
@@ -149,7 +132,7 @@ func PopulateBox(box int) {
 	}
 }
 
-func PopulateBoard() {
+func (b *Board) PopulateBoard() {
 
 	// Populate diagonal boxes first to increase chance of success of brute force
 	box_order := [9]int{0, 4, 8, 1, 2, 3, 5, 6, 7}
@@ -165,16 +148,16 @@ func PopulateBoard() {
 	}
 
 	for _, v := range box_order {
-		PopulateBox(v)
+		b.PopulateBox(v)
 	}
 
 }
 
 func main() {
 
-	PopulateBoard()
+	board.PopulateBoard()
 
-	PrintBoard()
+	board.PrintBoard()
 
 }
 
