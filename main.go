@@ -20,7 +20,7 @@ type Cell struct {
 // on instantiate step, point to vals
 type Box struct {
 	index int
-	vals  [9]int
+	vals  [9]Cell
 }
 
 type Board struct {
@@ -37,7 +37,6 @@ func (b *Board) PrintBoard() {
 		for c := range row {
 			cur := b.cells[r][c]
 			fmt.Print("|")
-			// fmt.Printf("%d:%d", cur.value, cur.box)
 			fmt.Printf("%d", cur.value)
 
 			if (c+1)%3 == 0 {
@@ -103,7 +102,7 @@ func (c *Cell) CheckValueConflict(val int) bool {
 	return false
 }
 
-func (b *Board) PopulateBox(box int) {
+func (b *Board) PopulateBox(box int) error {
 	vals := GetRandomVals()
 	i := 0
 	for r, row := range b.cells {
@@ -113,6 +112,7 @@ func (b *Board) PopulateBox(box int) {
 			if cur.box == box {
 
 				valueConflict := cur.CheckValueConflict(vals[i])
+				fmt.Println(i, len(vals))
 
 				switch {
 				case !valueConflict:
@@ -120,36 +120,69 @@ func (b *Board) PopulateBox(box int) {
 					vals = removeSliceZero(vals)
 					fmt.Println(vals)
 
-				case i+1 == len(vals):
-					fmt.Println("No solution", cur, vals[i])
+				case i+1 >= len(vals):
+
+					return fmt.Errorf("no solution: %v %v", cur, vals[i])
 
 				case valueConflict:
 					i++
+					// default:
+					// return fmt.Errorf("unhandled exception: i=%v, vals=%v", cur, vals[i])
 				}
 
 			}
 		}
 	}
+	return nil
 }
 
 func (b *Board) PopulateBoard() {
 
 	// Populate diagonal boxes first to increase chance of success of brute force
-	box_order := [9]int{0, 4, 8, 1, 2, 3, 5, 6, 7}
+	// box_order := [9]int{0, 4, 8, 1, 2, 3, 5, 6, 7}
 
-	for r, row := range b.cells {
-		for c := range row {
-			box := r/3*3 + c/3
-			cur := &b.cells[r][c]
-			cur.row = r
-			cur.col = c
-			cur.box = box
+	for i := 0; i < 9; i++ {
+		// Index the box
+		b.boxes[i].index = i
+		for j := 0; j < 9; j++ {
+			
+			// Get the boxes position using division truncation trick
+			box := i/3*3 + j/3
+
+			// Store reference to current created cell at this position
+			cell := &Cell{row: i, col: j, box: box}
+
+			// Create reference to cell in board row/col
+			b.cells[i][j] = *cell
+
+			// Create reference to cell in appropriate box and position in the boxes index
+			b.boxes[i/3*3+j/3].vals[i%3*3+j%3] = *cell
+
 		}
 	}
 
-	for _, v := range box_order {
-		b.PopulateBox(v)
-	}
+	// for i := 0; i < 9; i++ {
+	// boxn := box_order[i]
+	// err := b.PopulateBox(boxn)
+	// if err != nil {
+	// fmt.Println(err)
+	// i--
+	// b.PrintBoard()
+
+	// }
+	// }
+
+	b.PopulateBox(0)
+	b.PopulateBox(4)
+	b.PopulateBox(8)
+
+	// for {
+	// 	err := b.PopulateBox(1)
+	// 	if err != nil {
+	// 		fmt.Println(err)
+	// 		b.PrintBoard()
+	// 	}
+	// }
 
 }
 
