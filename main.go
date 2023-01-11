@@ -20,7 +20,7 @@ type Cell struct {
 // on instantiate step, point to vals
 type Box struct {
 	index int
-	cells  [9]*Cell
+	cells [9]*Cell
 }
 
 type Board struct {
@@ -66,7 +66,6 @@ func seedRand() {
 	}
 
 	seedval := int64(binary.LittleEndian.Uint64(b[:]))
-
 	math_rand.Seed(seedval)
 }
 
@@ -102,115 +101,109 @@ func (c *Cell) CheckValueConflict(val int) bool {
 	return false
 }
 
-// func (b *Board) _PopulateBox(box int) error {
-	
-// 	vals := GetRandomVals()
-// 	i := 0
-// 	for r, row := range b.cells {
-// 		for c := range row {
-// 			cur := &b.cells[r][c]
+func (b *Box) ContainsValue(val int) bool {
 
-// 			if cur.box == box {
-
-// 				valueConflict := cur.CheckValueConflict(vals[i])
-// 				fmt.Println(i, len(vals))
-
-// 				switch {
-// 				case !valueConflict:
-// 					cur.value = vals[i]
-// 					vals = removeSliceZero(vals)
-// 					fmt.Println(vals)
-
-// 				case i+1 >= len(vals):
-
-// 					return fmt.Errorf("no solution: %v %v", cur, vals[i])
-
-// 				case valueConflict:
-// 					i++
-// 					// default:
-// 					// return fmt.Errorf("unhandled exception: i=%v, vals=%v", cur, vals[i])
-// 				}
-
-// 			}
-// 		}
-// 	}
-// 	return nil
-// }
-
-func (b *Box) PopulateBox(){
-	for i, v := range GetRandomVals(){
-		b.cells[i].value = v
+	for i := 0; i < len(b.cells); i++ {
+		if b.cells[i].value == val {
+			return true
+		}
 	}
+	return false
 
 }
 
-func (b *Board) PopulateBoard() {
+func (b *Board) IndexBoard() {
 
 	// Populate diagonal boxes first to increase chance of success of brute force
 	// box_order := [9]int{0, 4, 8, 1, 2, 3, 5, 6, 7}
 
-	for i := 0; i < 9; i++ {
+	for i := 0; i < 81; i++ {
+		row := i / 9
+		col := i % 9
 		// Index the box
-		b.boxes[i].index = i
-		for j := 0; j < 9; j++ {
-			
-			// Get the boxes position using division truncation trick
-			box := i/3*3 + j/3
+		b.boxes[row].index = row
 
-			// Store reference to current created cell at this position
-			cell := &Cell{row: i, col: j, box: box}
+		// Get the box position
+		box := row/3*3 + col/3
 
-			// Create reference to cell in board row/col
-			b.cells[i][j] = cell
+		// Store reference to current created cell at this position
+		cell := &Cell{row: row, col: col, box: box}
 
-			// Create reference to cell in appropriate box and position in the boxes index
-			b.boxes[i/3*3+j/3].cells[i%3*3+j%3] = cell
+		// Create reference to cell in board row/col
+		b.cells[row][col] = cell
 
+		// Create reference to cell in appropriate box and position in the boxes index
+		b.boxes[row/3*3+col/3].cells[row%3*3+col%3] = cell
+
+	}
+
+}
+
+// Check if the board has been completed
+func (b *Board) CheckBoard() bool {
+
+	for i := 0; i < 81; i++ {
+		row := i / 9
+		col := i % 9
+		if b.cells[row][col].value == 0 {
+			// Board incomplete
+			return false
+		}
+	}
+	// Board has been completed, trigger recursive exit
+	return true
+}
+
+// Recursive backtracking function
+// Begins placing a random sequence and placing valid values
+// Backtraces as far as required to create a valid solution
+func (b *Board) FillBoard() (bool, error) {
+
+	for i := 0; i < 81; i++ {
+		row := i / 9
+		col := i % 9
+		// Refer to current cell
+		cell := b.cells[row][col]
+
+		if cell.value == 0 {
+
+			// Next set of values to attempt placement
+			// Iterate and recursively place
+			vals := GetRandomVals()
+			for _, v := range vals {
+
+				// Value is valid and can be placed
+				if !cell.CheckValueConflict(v) && !b.boxes[cell.box].ContainsValue(v) {
+					cell.value = v
+
+					// Board is completed
+					if b.CheckBoard() {
+						return true, nil
+
+					} else {
+						if next, _ := b.FillBoard(); next {
+							return true, nil
+						}
+					}
+				}
+			}
+			// No solution from here; reset the current cell's value and break loop
+			b.cells[row][col].value = 0
+			break
 		}
 	}
 
-	b.boxes[0].PopulateBox()
-
-	// for _, v := range b.boxes[0].cells{
-		// b.cells[v.row][v.col].value = v.value
-	// }
-
-
-
-
-
-
-	// for i := 0; i < 9; i++ {
-	// boxn := box_order[i]
-	// err := b.PopulateBox(boxn)
-	// if err != nil {
-	// fmt.Println(err)
-	// i--
-	// b.PrintBoard()
-
-	// }
-	// }
-
-	// b.PopulateBox(0)
-	// b.PopulateBox(4)
-	// b.PopulateBox(8)
-
-	// for {
-	// 	err := b.PopulateBox(1)
-	// 	if err != nil {
-	// 		fmt.Println(err)
-	// 		b.PrintBoard()
-	// 	}
-	// }
+	// Trace back to previous cell and attempt a different value
+	return false, nil
 
 }
 
 func main() {
 
-	board.PopulateBoard()
+	board.IndexBoard()
 
+	board.FillBoard()
 	board.PrintBoard()
-
 
 }
 
