@@ -20,11 +20,11 @@ type Cell struct {
 // on instantiate step, point to vals
 type Box struct {
 	index int
-	vals  [9]Cell
+	cells  [9]*Cell
 }
 
 type Board struct {
-	cells [9][9]Cell
+	cells [9][9]*Cell
 	boxes [9]Box
 }
 
@@ -102,38 +102,46 @@ func (c *Cell) CheckValueConflict(val int) bool {
 	return false
 }
 
-func (b *Board) PopulateBox(box int) error {
-	vals := GetRandomVals()
-	i := 0
-	for r, row := range b.cells {
-		for c := range row {
-			cur := &b.cells[r][c]
+// func (b *Board) _PopulateBox(box int) error {
+	
+// 	vals := GetRandomVals()
+// 	i := 0
+// 	for r, row := range b.cells {
+// 		for c := range row {
+// 			cur := &b.cells[r][c]
 
-			if cur.box == box {
+// 			if cur.box == box {
 
-				valueConflict := cur.CheckValueConflict(vals[i])
-				fmt.Println(i, len(vals))
+// 				valueConflict := cur.CheckValueConflict(vals[i])
+// 				fmt.Println(i, len(vals))
 
-				switch {
-				case !valueConflict:
-					cur.value = vals[i]
-					vals = removeSliceZero(vals)
-					fmt.Println(vals)
+// 				switch {
+// 				case !valueConflict:
+// 					cur.value = vals[i]
+// 					vals = removeSliceZero(vals)
+// 					fmt.Println(vals)
 
-				case i+1 >= len(vals):
+// 				case i+1 >= len(vals):
 
-					return fmt.Errorf("no solution: %v %v", cur, vals[i])
+// 					return fmt.Errorf("no solution: %v %v", cur, vals[i])
 
-				case valueConflict:
-					i++
-					// default:
-					// return fmt.Errorf("unhandled exception: i=%v, vals=%v", cur, vals[i])
-				}
+// 				case valueConflict:
+// 					i++
+// 					// default:
+// 					// return fmt.Errorf("unhandled exception: i=%v, vals=%v", cur, vals[i])
+// 				}
 
-			}
-		}
+// 			}
+// 		}
+// 	}
+// 	return nil
+// }
+
+func (b *Box) PopulateBox(){
+	for i, v := range GetRandomVals(){
+		b.cells[i].value = v
 	}
-	return nil
+
 }
 
 func (b *Board) PopulateBoard() {
@@ -153,13 +161,24 @@ func (b *Board) PopulateBoard() {
 			cell := &Cell{row: i, col: j, box: box}
 
 			// Create reference to cell in board row/col
-			b.cells[i][j] = *cell
+			b.cells[i][j] = cell
 
 			// Create reference to cell in appropriate box and position in the boxes index
-			b.boxes[i/3*3+j/3].vals[i%3*3+j%3] = *cell
+			b.boxes[i/3*3+j/3].cells[i%3*3+j%3] = cell
 
 		}
 	}
+
+	b.boxes[0].PopulateBox()
+
+	// for _, v := range b.boxes[0].cells{
+		// b.cells[v.row][v.col].value = v.value
+	// }
+
+
+
+
+
 
 	// for i := 0; i < 9; i++ {
 	// boxn := box_order[i]
@@ -172,9 +191,9 @@ func (b *Board) PopulateBoard() {
 	// }
 	// }
 
-	b.PopulateBox(0)
-	b.PopulateBox(4)
-	b.PopulateBox(8)
+	// b.PopulateBox(0)
+	// b.PopulateBox(4)
+	// b.PopulateBox(8)
 
 	// for {
 	// 	err := b.PopulateBox(1)
@@ -191,6 +210,7 @@ func main() {
 	board.PopulateBoard()
 
 	board.PrintBoard()
+
 
 }
 
