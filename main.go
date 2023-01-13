@@ -4,9 +4,15 @@ import (
 	crypto_rand "crypto/rand"
 	"encoding/binary"
 	"fmt"
+	"html/template"
 	math_rand "math/rand"
+	"net/http"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
+
+var _ = template.ErrAmbigContext
 
 type Cell struct {
 	row   int
@@ -205,6 +211,18 @@ func main() {
 
 	board.FillBoard()
 	board.PrintBoard()
+
+	app := gin.Default()
+
+	app.LoadHTMLGlob("templates/*")
+
+	app.GET("/", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "index.html", gin.H{
+			"title": "Godoku Title",
+		})
+	})
+
+	app.Run(":3399")
 
 }
 
