@@ -33,14 +33,15 @@ type Board struct {
 
 const (
 	EASY   int = 10
-	MEDIUM int = 25
+	MEDIUM int = 20
 	HARD   int = 30
 )
 
 var (
-	board       Board
+	board Board
+	// SolveBoard() helper variable; 0, 1, 1+ for count of solutions to the board, board will only be valid if there is a single solution
 	n_solutions int = 1
-	difficulty  int = HARD
+	difficulty  int = EASY
 )
 
 func (b *Board) PrintBoard() {
@@ -172,12 +173,15 @@ func (b *Board) CheckBoard() bool {
 }
 
 func (b *Board) RemoveCells() {
+	// Reset val
 	n_solutions = 1
 	for {
+
 		random_vals := GetRandomVals()
 		rRow := random_vals[0] - 1
 		rCol := random_vals[1] - 1
 
+		// Get a new cell if the value is 0
 		for b.cells[rRow][rCol].Value == 0 {
 			random_vals = GetRandomVals()
 			rRow = random_vals[0] - 1
@@ -187,12 +191,13 @@ func (b *Board) RemoveCells() {
 		old_val := b.cells[rRow][rCol].Value
 		b.cells[rRow][rCol].Value = 0
 
+		// Either 0 or multiple solutions; invalid board, restore the value and repeat
 		if n_solutions != 1 {
 			b.cells[rRow][rCol].Value = old_val
 		}
 
 		if threshold_met, _ := b.CountZeroCells(); threshold_met {
-			b.SolveBoard()
+			b.SolveBoard(false)
 			break
 		}
 
@@ -218,43 +223,13 @@ func (b *Board) CountZeroCells() (bool, int) {
 
 }
 
-func (b *Board) SolveBoard() bool {
-
-	for i := 0; i < 81; i++ {
-		row := i / 9
-		col := i % 9
-
-		cell := b.cells[row][col]
-
-		if cell.Value == 0 {
-			vals := GetRandomVals()
-			for _, v := range vals {
-				if !cell.CheckValueConflict(v) && !b.boxes[cell.box].ContainsValue(v) {
-
-					cell.Value = v
-					if b.CheckBoard() {
-						n_solutions++
-						break
-					} else {
-						if b.SolveBoard() {
-							return true
-						}
-					}
-
-				}
-			}
-			cell.Value = 0
-			break
-		}
-	}
-	return false
-
-}
-
 // Recursive backtracking function
 // Begins placing a random sequence and placing valid values
 // Backtraces as far as required to create a valid solution
-func (b *Board) FillBoard() bool {
+// "fill" parameter should be
+// : TRUE when trying to generate a board
+// : FALSE when checking if the board is still valid and uniquely solvable
+func (b *Board) SolveBoard(fill bool) bool {
 
 	for i := 0; i < 81; i++ {
 		row := i / 9
@@ -275,10 +250,16 @@ func (b *Board) FillBoard() bool {
 
 					// Board is completed
 					if b.CheckBoard() {
-						return true
+						n_solutions++
+
+						if fill {
+							return true
+						} else {
+							break
+						}
 
 					} else {
-						if b.FillBoard() {
+						if b.SolveBoard(fill) {
 							return true
 						}
 					}
