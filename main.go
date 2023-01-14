@@ -280,7 +280,7 @@ func main() {
 
 	board.IndexBoard()
 
-	board.FillBoard()
+	board.SolveBoard(true)
 	board.RemoveCells()
 
 	board.PrintBoard()
