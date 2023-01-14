@@ -1,4 +1,4 @@
-module ckinasch/godoku
+module github.com/ckinasch/godoku
 
 go 1.19
 
