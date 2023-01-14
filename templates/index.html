@@ -5,11 +5,20 @@
 
     <h1>Godoku</h1>
 
+<table>
+
 {{range $i, $v := .cells }}
+<tr>
+
     {{range $j, $w := $v}}
+    <td>
+
         {{$w.Value}}
+    </td>
     {{end}}
+</tr>
 {{end}}
+</table>
     
 </body>
 </html>
