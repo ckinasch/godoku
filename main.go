@@ -31,7 +31,17 @@ type Board struct {
 	boxes [9]Box
 }
 
-var board Board
+const (
+	EASY   int = 10
+	MEDIUM int = 25
+	HARD   int = 30
+)
+
+var (
+	board       Board
+	n_solutions int = 1
+	difficulty  int = HARD
+)
 
 func (b *Board) PrintBoard() {
 	lines := "---------------------"
@@ -161,6 +171,86 @@ func (b *Board) CheckBoard() bool {
 	return true
 }
 
+func (b *Board) RemoveCells() {
+	n_solutions = 1
+	for {
+		random_vals := GetRandomVals()
+		rRow := random_vals[0] - 1
+		rCol := random_vals[1] - 1
+
+		for b.cells[rRow][rCol].Value == 0 {
+			random_vals = GetRandomVals()
+			rRow = random_vals[0] - 1
+			rCol = random_vals[1] - 1
+		}
+
+		old_val := b.cells[rRow][rCol].Value
+		b.cells[rRow][rCol].Value = 0
+
+		if n_solutions != 1 {
+			b.cells[rRow][rCol].Value = old_val
+		}
+
+		if threshold_met, _ := b.CountZeroCells(); threshold_met {
+			b.SolveBoard()
+			break
+		}
+
+	}
+}
+
+// Returns true/false if the desired number of cells at 0 is met
+func (b *Board) CountZeroCells() (bool, int) {
+
+	zero_cells := 0
+
+	for i := 0; i < 81; i++ {
+		row := i / 9
+		col := i % 9
+		cell := b.cells[row][col]
+
+		if cell.Value == 0 {
+			zero_cells++
+		}
+	}
+
+	return zero_cells >= difficulty, zero_cells
+
+}
+
+func (b *Board) SolveBoard() bool {
+
+	for i := 0; i < 81; i++ {
+		row := i / 9
+		col := i % 9
+
+		cell := b.cells[row][col]
+
+		if cell.Value == 0 {
+			vals := GetRandomVals()
+			for _, v := range vals {
+				if !cell.CheckValueConflict(v) && !b.boxes[cell.box].ContainsValue(v) {
+
+					cell.Value = v
+					if b.CheckBoard() {
+						n_solutions++
+						break
+					} else {
+						if b.SolveBoard() {
+							return true
+						}
+					}
+
+				}
+			}
+			cell.Value = 0
+			break
+		}
+	}
+	return false
+
+}
+
 // Recursive backtracking function
 // Begins placing a random sequence and placing valid values
 // Backtraces as far as required to create a valid solution
@@ -195,7 +285,7 @@ func (b *Board) FillBoard() bool {
 				}
 			}
 			// No solution from here; reset the current cell's value and break loop
-			b.cells[row][col].Value = 0
+			cell.Value = 0
 			break
 		}
 	}
@@ -210,6 +300,8 @@ func main() {
 	board.IndexBoard()
 
 	board.FillBoard()
+	board.RemoveCells()
+
 	board.PrintBoard()
 
 	app := gin.Default()
