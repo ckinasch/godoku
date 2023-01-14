@@ -4,14 +4,20 @@ import (
 	crypto_rand "crypto/rand"
 	"encoding/binary"
 	"fmt"
+	"html/template"
 	math_rand "math/rand"
+	"net/http"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
+
+var _ = template.ErrAmbigContext
 
 type Cell struct {
 	row   int
 	col   int
-	value int
+	Value int
 	box   int
 }
 
@@ -34,7 +40,7 @@ func (b *Board) PrintBoard() {
 		for c := range row {
 			cur := b.cells[r][c]
 			fmt.Print("|")
-			fmt.Printf("%d", cur.value)
+			fmt.Printf("%d", cur.Value)
 
 			if (c+1)%3 == 0 {
 				fmt.Print("|")
@@ -93,10 +99,10 @@ func removeSliceZero(s []int) []int {
 func (c *Cell) CheckValueConflict(val int) bool {
 
 	for i := 0; i < 9; i++ {
-		if val == board.cells[i][c.col].value {
+		if val == board.cells[i][c.col].Value {
 			return true
 		}
-		if val == board.cells[c.row][i].value {
+		if val == board.cells[c.row][i].Value {
 			return true
 		}
 	}
@@ -106,7 +112,7 @@ func (c *Cell) CheckValueConflict(val int) bool {
 func (b *Box) ContainsValue(val int) bool {
 
 	for i := 0; i < len(b.cells); i++ {
-		if b.cells[i].value == val {
+		if b.cells[i].Value == val {
 			return true
 		}
 	}
@@ -146,7 +152,7 @@ func (b *Board) CheckBoard() bool {
 	for i := 0; i < 81; i++ {
 		row := i / 9
 		col := i % 9
-		if b.cells[row][col].value == 0 {
+		if b.cells[row][col].Value == 0 {
 			// Board incomplete
 			return false
 		}
@@ -166,7 +172,7 @@ func (b *Board) FillBoard() bool {
 		// Refer to current cell
 		cell := b.cells[row][col]
 
-		if cell.value == 0 {
+		if cell.Value == 0 {
 
 			// Next set of values to attempt placement
 			// Iterate and recursively place
@@ -175,7 +181,7 @@ func (b *Board) FillBoard() bool {
 
 				// Value is valid and can be placed
 				if !cell.CheckValueConflict(v) && !b.boxes[cell.box].ContainsValue(v) {
-					cell.value = v
+					cell.Value = v
 
 					// Board is completed
 					if b.CheckBoard() {
@@ -189,7 +195,7 @@ func (b *Board) FillBoard() bool {
 				}
 			}
 			// No solution from here; reset the current cell's value and break loop
-			b.cells[row][col].value = 0
+			b.cells[row][col].Value = 0
 			break
 		}
 	}
@@ -205,6 +211,22 @@ func main() {
 
 	board.FillBoard()
 	board.PrintBoard()
+
+	app := gin.Default()
+
+	app.LoadHTMLGlob("templates/*")
+
+	page := gin.H{
+		"title": "Godoku",
+		"cells": board.cells}
+
+	app.SetHTMLTemplate(template.Must(template.ParseFiles("templates/header.html", "templates/index.html")))
+
+	app.GET("/", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "homeHTML", page)
+	})
+
+	app.Run(":3399")
 
 }
 
