@@ -8,7 +8,7 @@ import (
 // Return a slice of randomly generated distinct integers; all values are incremented
 func getRandomVals() []int {
 
-	vals := rand.Perm(9)
+	vals := rand.Perm(nRowsCols)
 	for i := range vals {
 		vals[i]++
 	}
@@ -20,5 +20,3 @@ func seedRand() {
 
 	rand.Seed(time.Now().Unix())
 }
-
-
